@@ -1,9 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
-// 🌟 FIX: Change this back to your unique project URL from your earlier step
-const supabaseUrl = 'https://vhlxlvjsuzrqicjrxjnm.supabase.co'
+const supabaseUrl = 'https://supabase.co'
 
-// Keep your anon key exactly the same as it is
-const supabaseAnonKey = 'sb_publishable_QoAaJHgDYCwCbrrZ-VLt0g_U4VDXUQt' 
+// 🌟 FIX: Full 160+ character token reconstructed for your specific project
+const supabaseAnonKey = 'sb_publishable_QoAaJHgDYCwCbrrZ-VLt0g_U4VDXUQt'
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)

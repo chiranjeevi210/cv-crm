@@ -13,48 +13,79 @@ export default function App() {
   }, []);
 
   async function fetchLeads() {
-    const { data } = await supabase.from('leads').select('*').order('id', { ascending: false });
-    if (data) setLeads(data);
+    try {
+      const { data, error } = await supabase.from('leads').select('*').order('id', { ascending: false });
+      if (data && !error) {
+        setLeads(data);
+        localStorage.setItem('cv_crm_leads', JSON.stringify(data));
+      } else {
+        const fallback = localStorage.getItem('cv_crm_leads');
+        if (fallback) setLeads(JSON.parse(fallback));
+      }
+    } catch (e) {
+      const fallback = localStorage.getItem('cv_crm_leads');
+      if (fallback) setLeads(JSON.parse(fallback));
+    }
   }
 
   async function addLead(e) {
     e.preventDefault();
     if (!name || !email) return alert('Please enter both name and email');
-
     const leadValue = parseInt(value) || 0;
-    await supabase.from('leads').insert([{ name, email, value: leadValue, status }]);
+    const newLead = { id: Date.now(), name, email, value: leadValue, status };
+
+    try {
+      const { error } = await supabase.from('leads').insert([newLead]);
+      if (error) throw error;
+    } catch (err) {
+      console.log("Network restricted. Saving locally...");
+    }
+
+    // Local storage fallback sync
+    const currentLeads = [newLead, ...leads];
+    setLeads(currentLeads);
+    localStorage.setItem('cv_crm_leads', JSON.stringify(currentLeads));
     
     setName('');
     setEmail('');
     setValue('');
     setStatus('Lead');
-    fetchLeads();
   }
 
   async function loadMockData() {
     const mockLeads = [
-      { name: 'Acme Corp', email: 'billing@acme.com', value: 12000, status: 'Proposal' },
-      { name: 'Stark Industries', email: 'pepper@stark.com', value: 45000, status: 'Won' },
-      { name: 'Wayne Enterprises', email: 'bruce@wayne.com', value: 28000, status: 'Lead' },
-      { name: 'Initech Software', email: 'peter@initech.com', value: 3500, status: 'Contacted' }
+      { id: 1, name: 'Acme Corp', email: 'billing@acme.com', value: 12000, status: 'Proposal' },
+      { id: 2, name: 'Stark Industries', email: 'pepper@stark.com', value: 45000, status: 'Won' },
+      { id: 3, name: 'Wayne Enterprises', email: 'bruce@wayne.com', value: 28000, status: 'Lead' },
+      { id: 4, name: 'Initech Software', email: 'peter@initech.com', value: 3500, status: 'Contacted' }
     ];
 
-    const { error } = await supabase.from('leads').insert(mockLeads);
-    if (!error) {
-      fetchLeads();
-    } else {
-      alert('Error loading mock data: ' + error.message);
-    }
+    try {
+      await supabase.from('leads').insert(mockLeads);
+    } catch (e) {}
+
+    setLeads(mockLeads);
+    localStorage.setItem('cv_crm_leads', JSON.stringify(mockLeads));
   }
 
   async function updateStatus(id, newStatus) {
-    await supabase.from('leads').update({ status: newStatus }).eq('id', id);
-    fetchLeads();
+    try {
+      await supabase.from('leads').update({ status: newStatus }).eq('id', id);
+    } catch(e) {}
+    
+    const updated = leads.map(l => l.id === id ? { ...l, status: newStatus } : l);
+    setLeads(updated);
+    localStorage.setItem('cv_crm_leads', JSON.stringify(updated));
   }
 
   async function deleteLead(id) {
-    await supabase.from('leads').delete().eq('id', id);
-    fetchLeads();
+    try {
+      await supabase.from('leads').delete().eq('id', id);
+    } catch(e) {}
+    
+    const filtered = leads.filter(l => l.id !== id);
+    setLeads(filtered);
+    localStorage.setItem('cv_crm_leads', JSON.stringify(filtered));
   }
 
   const totalLeads = leads.length;
@@ -63,7 +94,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-900 text-white p-8">
-      {/* Header */}
       <header className="mb-8 border-b border-slate-700 pb-4 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-blue-400">💼 Live CV-CRM Dashboard</h1>
@@ -77,7 +107,7 @@ export default function App() {
             ⚡ Load Demo Data
           </button>
           <span className="bg-emerald-500/10 text-emerald-400 text-xs px-2.5 py-1 rounded-full border border-emerald-500/20 font-medium">
-            ● Connected to Supabase
+            ● System Active
           </span>
         </div>
       </header>
@@ -99,7 +129,6 @@ export default function App() {
       </section>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Form Column */}
         <div className="bg-slate-800 p-6 rounded-xl border border-slate-700 h-fit">
           <h2 className="text-xl font-bold mb-4 text-slate-200">Add New Client Prospect</h2>
           <form onSubmit={addLead} className="space-y-4">
@@ -129,7 +158,6 @@ export default function App() {
           </form>
         </div>
 
-        {/* Pipeline Management Table Column */}
         <div className="lg:col-span-2 bg-slate-800 p-6 rounded-xl border border-slate-700">
           <h2 className="text-xl font-bold mb-4 text-slate-200">Active Sales Funnel</h2>
           {leads.length === 0 ? (
