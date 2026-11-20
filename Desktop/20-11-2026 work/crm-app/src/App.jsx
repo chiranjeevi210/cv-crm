@@ -32,6 +32,22 @@ export default function App() {
     fetchLeads();
   }
 
+  async function loadMockData() {
+    const mockLeads = [
+      { name: 'Acme Corp', email: 'billing@acme.com', value: 12000, status: 'Proposal' },
+      { name: 'Stark Industries', email: 'pepper@stark.com', value: 45000, status: 'Won' },
+      { name: 'Wayne Enterprises', email: 'bruce@wayne.com', value: 28000, status: 'Lead' },
+      { name: 'Initech Software', email: 'peter@initech.com', value: 3500, status: 'Contacted' }
+    ];
+
+    const { error } = await supabase.from('leads').insert(mockLeads);
+    if (!error) {
+      fetchLeads();
+    } else {
+      alert('Error loading mock data: ' + error.message);
+    }
+  }
+
   async function updateStatus(id, newStatus) {
     await supabase.from('leads').update({ status: newStatus }).eq('id', id);
     fetchLeads();
@@ -55,39 +71,7 @@ export default function App() {
           <h1 className="text-3xl font-bold tracking-tight text-blue-400">💼 Live CV-CRM Dashboard</h1>
           <p className="text-slate-400 mt-1">Full-Stack Cloud Sync Enabled</p>
         </div>
-        <span className="bg-emerald-500/10 text-emerald-400 text-xs px-2.5 py-1 rounded-full border border-emerald-500/20 font-medium">
-          ● Connected to Supabase
-        </span>
-      </header>
-// ... keep your existing imports and states at the top of App() ...
-
-  // Add this function inside your App component right under your other functions:
-  async function loadMockData() {
-    const mockLeads = [
-      { name: 'Acme Corp', email: 'billing@acme.com', value: 12000, status: 'Proposal' },
-      { name: 'Stark Industries', email: 'pepper@stark.com', value: 45000, status: 'Won' },
-      { name: 'Wayne Enterprises', email: 'bruce@wayne.com', value: 28000, status: 'Lead' },
-      { name: 'Initech Software', email: 'peter@initech.com', value: 3500, status: 'Contacted' }
-    ];
-
-    const { error } = await supabase.from('leads').insert(mockLeads);
-    if (!error) {
-      fetchLeads(); // Reload the data on the screen
-    } else {
-      alert('Error loading mock data: ' + error.message);
-    }
-  }
-
-  // Next, scroll down to your return statement and add the button inside your <header>:
-  return (
-    <div className="min-h-screen bg-slate-900 text-white p-8">
-      <header className="mb-8 border-b border-slate-700 pb-4 flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-blue-400">💼 Live CV-CRM Dashboard</h1>
-          <p className="text-slate-400 mt-1">Full-Stack Cloud Sync Enabled</p>
-        </div>
         <div className="flex items-center gap-4">
-          {/* HERE IS THE NEW DEMO DATA BUTTON */}
           <button 
             onClick={loadMockData}
             className="bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 border border-blue-500/30 text-xs font-semibold py-1.5 px-3 rounded-lg cursor-pointer transition"
@@ -99,7 +83,6 @@ export default function App() {
           </span>
         </div>
       </header>
-// ... keep the rest of your file exactly the same ...
 
       {/* Metrics Cards Grid */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
