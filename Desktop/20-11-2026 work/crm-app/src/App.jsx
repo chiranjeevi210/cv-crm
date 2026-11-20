@@ -24,7 +24,6 @@ export default function App() {
     const leadValue = parseInt(value) || 0;
     await supabase.from('leads').insert([{ name, email, value: leadValue, status }]);
     
-    // Clear inputs and reload list
     setName('');
     setEmail('');
     setValue('');
@@ -58,7 +57,6 @@ export default function App() {
     fetchLeads();
   }
 
-  // Calculate live analytics metrics
   const totalLeads = leads.length;
   const dealsWon = leads.filter(l => l.status === 'Won').length;
   const totalPipelineValue = leads.reduce((sum, l) => sum + (Number(l.value) || 0), 0);
